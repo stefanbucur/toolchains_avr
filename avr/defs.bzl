@@ -14,6 +14,9 @@
 
 """Public-facing rules for building AVR firmware."""
 
-load("//avr/private:firmware.bzl", _avr_firmware = "avr_firmware")
+load("//avr/private:avrdude.bzl", _avrdude = "avrdude")
+load("//avr/private:firmware.bzl", _AvrFirmwareInfo = "AvrFirmwareInfo", _avr_firmware = "avr_firmware")
 
+AvrFirmwareInfo = _AvrFirmwareInfo
 avr_firmware = _avr_firmware
+avrdude = _avrdude

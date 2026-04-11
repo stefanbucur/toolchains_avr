@@ -17,6 +17,14 @@
 load("@rules_cc//cc:find_cc_toolchain.bzl", "CC_TOOLCHAIN_ATTRS", "find_cc_toolchain", "use_cc_toolchain")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 
+AvrFirmwareInfo = provider(
+    doc = "Provides the ELF and Intel HEX outputs of an avr_firmware target.",
+    fields = {
+        "elf": "The .elf output file.",
+        "hex": "The Intel HEX (.hex) output file.",
+    },
+)
+
 def _avr_transition_impl(_settings, attr):
     if not attr.is_rust:
         return {}
@@ -58,7 +66,10 @@ def _avr_firmware_impl(ctx):
         mnemonic = "AvrObjcopy",
         progress_message = "Generating AVR hex {} from {}".format(hex.path, src.path),
     )
-    return [DefaultInfo(files = depset([elf, hex]))]
+    return [
+        DefaultInfo(files = depset([elf, hex])),
+        AvrFirmwareInfo(elf = elf, hex = hex),
+    ]
 
 avr_firmware = rule(
     implementation = _avr_firmware_impl,

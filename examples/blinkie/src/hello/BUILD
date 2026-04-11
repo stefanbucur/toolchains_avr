@@ -12,10 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@avr//avr:defs.bzl", "avrdude")
 load("@avr//cc:defs.bzl", "avr_cc_binary")
 
 avr_cc_binary(
     name = "hello",
     srcs = ["hello_main.c"],
     compatible_mcus = ["avr128db48"],
+)
+
+avrdude(
+    name = "flash",
+    src = ":hello",
+    flags = [
+        "-p",
+        "avr128db48",
+        "-c",
+        "pkobn_updi",
+        "-U",
+        "flash:w:$HEX:i",
+    ],
 )
