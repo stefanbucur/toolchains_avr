@@ -1,5 +1,7 @@
 # toolchains_avr
 
+> **Community project.** `toolchains_avr` is an independent, community-maintained project. It is not affiliated with, endorsed by, or officially supported by Microchip Technology, the Bazel authors, or any other organization.
+
 Bazel rules for AVR microcontroller development, supporting both C/C++ and Rust.
 
 [AVR](https://www.microchip.com/en-us/products/microcontrollers-and-microprocessors/8-bit-mcus/avr-mcus) is Microchip's family of 8-bit microcontrollers, widely used in embedded systems and popularized by the Arduino platform.
