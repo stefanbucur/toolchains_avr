@@ -1,0 +1,138 @@
+# Copyright 2026 The toolchains_avr authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+load("@rules_rust//rust:toolchain.bzl", "rust_analyzer_toolchain", "rust_stdlib_filegroup", "rust_toolchain")
+load("@toolchains_avr//avr/private:hosts.bzl", "SUPPORTED_HOSTS")  # buildifier: disable=bzl-visibility
+load("@toolchains_avr//avr/private:mcus.bzl", "AVR_MCU_VALUES")  # buildifier: disable=bzl-visibility
+load("@toolchains_avr//rust/private:sysroot.bzl", "rust_toolchain_sysroot")  # buildifier: disable=bzl-visibility
+
+# Sysroot built from the AVR core library.
+# The rust_toolchain_sysroot rule automatically transitions to bootstrap=True
+# when building its srcs, so core compiles with an empty stdlib.
+rust_toolchain_sysroot(
+    name = "avr_core_sysroot",
+    srcs = [
+        "@avr_rust_src//:compiler_builtins",
+        "@avr_rust_src//:core",
+    ],
+    target_triple = "avr-none",
+)
+
+# stdlib fileset: empty during bootstrap, real sysroot for user code.
+rust_stdlib_filegroup(
+    name = "rust_std_avr",
+    srcs = select({
+        "@toolchains_avr//rust/config:is_bootstrap": [],
+        "//conditions:default": [":avr_core_sysroot"],
+    }),
+)
+
+rust_analyzer_toolchain(
+    name = "rust_analyzer_nightly_toolchain",
+    proc_macro_srv = "@avr_rust_analyzer_tools//:rust_analyzer_proc_macro_srv",
+    rust_analyzer = "@avr_rust_analyzer_tools//:rust_analyzer",
+    rustc = "@avr_rust_host_tools//:rustc",
+    rustc_srcs = "@avr_rust_analyzer_tools//lib/rustlib/src:rustc_srcs",
+    visibility = ["//visibility:public"],
+)
+
+# Per-host rust_toolchain implementations
+[
+    rust_toolchain(
+        name = "avr_rust_toolchain_%s" % host_key,
+        binary_ext = "",
+        cargo = "%s//:cargo" % SUPPORTED_HOSTS[host_key].rust_repo,
+        cargo_clippy = "%s//:cargo_clippy_bin" % SUPPORTED_HOSTS[host_key].rust_repo,
+        clippy_driver = "%s//:clippy_driver_bin" % SUPPORTED_HOSTS[host_key].rust_repo,
+        default_edition = "2024",
+        dylib_ext = SUPPORTED_HOSTS[host_key].dylib_ext,
+        exec_triple = SUPPORTED_HOSTS[host_key].rust_triple,
+        extra_exec_rustc_flags = [],
+        extra_rustc_flags = [
+            "-C",
+            "panic=abort",
+            "-C",
+            "opt-level=s",
+        ] + select({
+            "@toolchains_avr//avr/platform:%s" % mcu: [
+                "-C",
+                "target-cpu=%s" % mcu,
+            ]
+            for mcu in AVR_MCU_VALUES
+        }),
+        linker = "%s//:bin/avr-gcc" % SUPPORTED_HOSTS[host_key].cc_repo,
+        linker_type = "indirect",
+        llvm_cov = "%s//:llvm_cov_bin" % SUPPORTED_HOSTS[host_key].rust_repo,
+        llvm_lib = "%s//:llvm_lib" % SUPPORTED_HOSTS[host_key].rust_repo,
+        llvm_profdata = "%s//:llvm_profdata_bin" % SUPPORTED_HOSTS[host_key].rust_repo,
+        rust_doc = "%s//:rustdoc" % SUPPORTED_HOSTS[host_key].rust_repo,
+        rust_objcopy = "%s//:rust-objcopy" % SUPPORTED_HOSTS[host_key].rust_repo,
+        rust_std = ":rust_std_avr",
+        rustc = "%s//:rustc" % SUPPORTED_HOSTS[host_key].rust_repo,
+        rustc_lib = "%s//:rustc_lib" % SUPPORTED_HOSTS[host_key].rust_repo,
+        rustfmt = "%s//:rustfmt_bin" % SUPPORTED_HOSTS[host_key].rust_repo,
+        staticlib_ext = ".a",
+        stdlib_linkflags = select({
+            "@toolchains_avr//avr/platform:%s" % mcu: ["-mmcu=%s" % mcu]
+            for mcu in AVR_MCU_VALUES
+        }),
+        target_triple = "avr-none",
+    )
+    for host_key in SUPPORTED_HOSTS
+]
+
+# Per-host AVR rust toolchain registrations
+[
+    toolchain(
+        name = "avr_rust_toolchain_%s_def" % host_key,
+        exec_compatible_with = SUPPORTED_HOSTS[host_key].constraint_values,
+        target_compatible_with = [
+            "@toolchains_avr//avr/platform:cpu_avr",
+            "@toolchains_avr//avr/platform:os_none",
+        ],
+        target_settings = [
+            "@rules_rust//rust/toolchain/channel:nightly",
+            "@toolchains_avr//rust/config:is_avr",
+        ],
+        toolchain = ":avr_rust_toolchain_%s" % host_key,
+        toolchain_type = "@rules_rust//rust:toolchain",
+    )
+    for host_key in SUPPORTED_HOSTS
+]
+
+# Per-host host rust toolchain registrations
+[
+    toolchain(
+        name = "host_rust_toolchain_%s_def" % host_key,
+        exec_compatible_with = SUPPORTED_HOSTS[host_key].constraint_values,
+        target_settings = [
+            "@rules_rust//rust/toolchain/channel:nightly",
+            "@toolchains_avr//rust/config:is_avr",
+        ],
+        toolchain = "%s//:rust_toolchain" % SUPPORTED_HOSTS[host_key].rust_repo,
+        toolchain_type = "@rules_rust//rust:toolchain",
+    )
+    for host_key in SUPPORTED_HOSTS
+]
+
+# Per-host rust-analyzer toolchain registrations (shared impl, per-host exec)
+[
+    toolchain(
+        name = "rust_analyzer_nightly_toolchain_%s_def" % host_key,
+        exec_compatible_with = SUPPORTED_HOSTS[host_key].constraint_values,
+        toolchain = ":rust_analyzer_nightly_toolchain",
+        toolchain_type = "@rules_rust//rust/rust_analyzer:toolchain_type",
+    )
+    for host_key in SUPPORTED_HOSTS
+]

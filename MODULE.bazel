@@ -1,0 +1,39 @@
+# Copyright 2026 The toolchains_avr authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+module(
+    name = "toolchains_avr",
+    version = "0.1.0",
+)
+
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.17")
+bazel_dep(name = "rules_rust", version = "0.69.0")
+bazel_dep(name = "rules_shell", version = "0.7.1")
+
+# TODO(sbucur): Remove once inherit_attrs is supported with cc_binary.
+cc_compatibility_proxy = use_extension("@rules_cc//cc:extensions.bzl", "compatibility_proxy")
+use_repo(cc_compatibility_proxy, "cc_compatibility_proxy")
+
+avr_rust = use_extension("//rust:extensions.bzl", "avr")
+use_repo(avr_rust, "avr_rust_toolchains")
+
+avr = use_extension("@toolchains_avr//cc:extensions.bzl", "avr")
+
+# This must be kept in sync with //avr/private/hosts.bzl.
+use_repo(avr, "avr_gcc_linux_x86")
+use_repo(avr, "avr_gcc_linux_arm64")
+use_repo(avr, "avr_gcc_darwin_arm64")
+use_repo(avr, "avr_gcc_host_tools")
