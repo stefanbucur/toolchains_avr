@@ -147,7 +147,39 @@ Now use the short form:
 bazel build --config=avr //src/hello:hello
 ```
 
-### 6. Write the full firmware
+### 6. Flash the firmware
+
+Install [avrdude](https://github.com/avrdude/avrdude) on your host system, then add an `avrdude_flash` target to `src/hello/BUILD`:
+
+```python
+load("@avr//avr:defs.bzl", "avrdude_flash")
+load("@avr//cc:defs.bzl", "avr_cc_binary")
+
+avr_cc_binary(
+    name = "hello",
+    srcs = ["hello_main.c"],
+)
+
+avrdude_flash(
+    name = "flash",
+    src = ":hello",
+    programmer = "pkobn_updi",
+)
+```
+
+`avrdude_flash` automatically injects `-p avr128db48` (from the active platform constraint), `-c pkobn_updi` (from the `programmer` attribute), and `-U flash:w:<hex>:i` (from the `src` target). Plug in your Curiosity Nano and run:
+
+```sh
+bazel run --config=avr //src/hello:flash
+```
+
+Bazel builds the firmware if needed, then runs avrdude. The full command is printed before execution so you can inspect or copy-paste it for manual use:
+
+```
+avrdude -p avr128db48 -c pkobn_updi -U flash:w:bazel-bin/src/hello/hello.hex:i
+```
+
+### 7. Write the full firmware
 
 Replace `src/hello/hello_main.c` with the complete LED-toggle example. The program configures PB3 as an LED output and PB2 as a button input with a falling-edge interrupt. The CPU sleeps between button presses to keep power consumption low.
 
@@ -192,6 +224,7 @@ int main(void) {
 This code uses AVR128DB48-specific peripheral registers. Add `compatible_mcus` to `src/hello/BUILD` so Bazel rejects the target on incompatible MCUs with a clear error instead of a cryptic compile failure:
 
 ```python
+load("@avr//avr:defs.bzl", "avrdude_flash")
 load("@avr//cc:defs.bzl", "avr_cc_binary")
 
 avr_cc_binary(
@@ -199,15 +232,21 @@ avr_cc_binary(
     srcs = ["hello_main.c"],
     compatible_mcus = ["avr128db48"],
 )
+
+avrdude_flash(
+    name = "flash",
+    src = ":hello",
+    programmer = "pkobn_updi",
+)
 ```
 
-Rebuild:
+Flash the updated firmware directly — Bazel detects that the source changed, rebuilds the firmware, and reflashes in one step:
 
 ```sh
-bazel build --config=avr //src/hello:hello
+bazel run --config=avr //src/hello:flash
 ```
 
-### 7. Add IDE support
+### 8. Add IDE support
 
 For code completion and go-to-definition in VS Code (or any editor using `clangd`), add [Hedron's compile commands extractor](https://github.com/hedronvision/bazel-compile-commands-extractor) to `MODULE.bazel`:
 
