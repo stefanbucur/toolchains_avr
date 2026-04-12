@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Public-facing rules for building AVR firmware."""
+"""Public-facing rules for building and flashing AVR firmware."""
 
-load("//avr/private:avrdude.bzl", _avrdude = "avrdude")
+load("//avr/private:avrdude.bzl", _avrdude_flash = "avrdude_flash")
 load("//avr/private:firmware.bzl", _AvrFirmwareInfo = "AvrFirmwareInfo", _avr_firmware = "avr_firmware")
 
 AvrFirmwareInfo = _AvrFirmwareInfo
 avr_firmware = _avr_firmware
-avrdude = _avrdude
+avrdude_flash = _avrdude_flash

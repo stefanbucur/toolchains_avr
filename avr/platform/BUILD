@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//avr/private:mcus.bzl", "AVR_MCU_VALUES")  # buildifier: disable=bzl-visibility
+load("//avr/private:mcus.bzl", "AVR_MCUS")  # buildifier: disable=bzl-visibility
 
 package(default_visibility = ["//visibility:public"])
 
@@ -33,5 +33,5 @@ constraint_setting(name = "mcu")
         name = mcu,
         constraint_setting = ":mcu",
     )
-    for mcu in AVR_MCU_VALUES
+    for mcu in AVR_MCUS
 ]

@@ -15,7 +15,7 @@
 load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
 load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
 load("//avr/private:hosts.bzl", "SUPPORTED_HOSTS")  # buildifier: disable=bzl-visibility
-load("//avr/private:mcus.bzl", "AVR_MCU_VALUES")  # buildifier: disable=bzl-visibility
+load("//avr/private:mcus.bzl", "AVR_MCUS")  # buildifier: disable=bzl-visibility
 
 package(default_visibility = ["//visibility:public"])
 
@@ -51,7 +51,7 @@ cc_args(
     ],
     args = select({
         "//avr/platform:%s" % mcu: ["-mmcu=%s" % mcu]
-        for mcu in AVR_MCU_VALUES
+        for mcu in AVR_MCUS
     }),
 )
 

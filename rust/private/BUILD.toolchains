@@ -14,7 +14,7 @@
 
 load("@rules_rust//rust:toolchain.bzl", "rust_analyzer_toolchain", "rust_stdlib_filegroup", "rust_toolchain")
 load("@toolchains_avr//avr/private:hosts.bzl", "SUPPORTED_HOSTS")  # buildifier: disable=bzl-visibility
-load("@toolchains_avr//avr/private:mcus.bzl", "AVR_MCU_VALUES")  # buildifier: disable=bzl-visibility
+load("@toolchains_avr//avr/private:mcus.bzl", "AVR_MCUS")  # buildifier: disable=bzl-visibility
 load("@toolchains_avr//rust/private:sysroot.bzl", "rust_toolchain_sysroot")  # buildifier: disable=bzl-visibility
 
 # Sysroot built from the AVR core library.
@@ -69,7 +69,7 @@ rust_analyzer_toolchain(
                 "-C",
                 "target-cpu=%s" % mcu,
             ]
-            for mcu in AVR_MCU_VALUES
+            for mcu in AVR_MCUS
         }),
         linker = "%s//:bin/avr-gcc" % SUPPORTED_HOSTS[host_key].cc_repo,
         linker_type = "indirect",
@@ -85,7 +85,7 @@ rust_analyzer_toolchain(
         staticlib_ext = ".a",
         stdlib_linkflags = select({
             "@toolchains_avr//avr/platform:%s" % mcu: ["-mmcu=%s" % mcu]
-            for mcu in AVR_MCU_VALUES
+            for mcu in AVR_MCUS
         }),
         target_triple = "avr-none",
     )
