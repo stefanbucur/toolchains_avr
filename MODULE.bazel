@@ -13,9 +13,6 @@ bazel_dep(name = "rules_shell", version = "0.7.1")
 cc_compatibility_proxy = use_extension("@rules_cc//cc:extensions.bzl", "compatibility_proxy")
 use_repo(cc_compatibility_proxy, "cc_compatibility_proxy")
 
-avr_rust = use_extension("//rust:extensions.bzl", "avr")
-use_repo(avr_rust, "avr_rust_toolchains")
-
 avr = use_extension("@toolchains_avr//cc:extensions.bzl", "avr")
 
 # This must be kept in sync with //avr/private/hosts.bzl.
