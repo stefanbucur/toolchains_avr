@@ -14,6 +14,7 @@
 
 """Implementation of the avr_firmware rule."""
 
+load("@rules_cc//cc:action_names.bzl", "ACTION_NAMES")
 load("@rules_cc//cc:find_cc_toolchain.bzl", "CC_TOOLCHAIN_ATTRS", "find_cc_toolchain", "use_cc_toolchain")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 
@@ -56,7 +57,7 @@ def _avr_firmware_impl(ctx):
     )
     objcopy = cc_common.get_tool_for_action(
         feature_configuration = feature_configuration,
-        action_name = "objcopy_embed_data",
+        action_name = ACTION_NAMES.objcopy_embed_data,
     )
     ctx.actions.run(
         inputs = [src] + toolchain.all_files.to_list(),
