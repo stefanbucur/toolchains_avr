@@ -17,12 +17,14 @@
 load("@rules_cc//cc:action_names.bzl", "ACTION_NAMES")
 load("@rules_cc//cc:find_cc_toolchain.bzl", "CC_TOOLCHAIN_ATTRS", "find_cc_toolchain", "use_cc_toolchain")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
+load("//cc:avr_action_names.bzl", "AVR_ACTION_NAMES")
 
 AvrFirmwareInfo = provider(
-    doc = "Provides the ELF and Intel HEX outputs of an avr_firmware target.",
+    doc = "Provides the ELF, Intel HEX, and size report outputs of an avr_firmware target.",
     fields = {
         "elf": "The .elf output file.",
         "hex": "The Intel HEX (.hex) output file.",
+        "size": "The avr-size report (.size) output file.",
     },
 )
 
@@ -51,25 +53,42 @@ def _avr_firmware_impl(ctx):
     elf = ctx.actions.declare_file(ctx.label.name + ".elf")
     ctx.actions.symlink(output = elf, target_file = src)
     hex = ctx.actions.declare_file(ctx.label.name + ".hex")
+    size = ctx.actions.declare_file(ctx.label.name + ".size")
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
         cc_toolchain = toolchain,
     )
+    tool_inputs = toolchain.all_files.to_list()
     objcopy = cc_common.get_tool_for_action(
         feature_configuration = feature_configuration,
         action_name = ACTION_NAMES.objcopy_embed_data,
     )
     ctx.actions.run(
-        inputs = [src] + toolchain.all_files.to_list(),
+        inputs = [src] + tool_inputs,
         outputs = [hex],
         executable = objcopy,
         arguments = ["-O", "ihex", src.path, hex.path],
         mnemonic = "AvrObjcopy",
         progress_message = "Generating AVR hex {} from {}".format(hex.path, src.path),
     )
+    avr_size = cc_common.get_tool_for_action(
+        feature_configuration = feature_configuration,
+        action_name = AVR_ACTION_NAMES.avr_size,
+    )
+    ctx.actions.run_shell(
+        inputs = [src] + tool_inputs,
+        outputs = [size],
+        command = "{avr_size} {elf} > {out}".format(
+            avr_size = avr_size,
+            elf = src.path,
+            out = size.path,
+        ),
+        mnemonic = "AvrSize",
+        progress_message = "Computing AVR size for {}".format(src.path),
+    )
     return [
-        DefaultInfo(files = depset([elf, hex])),
-        AvrFirmwareInfo(elf = elf, hex = hex),
+        DefaultInfo(files = depset([elf, hex, size])),
+        AvrFirmwareInfo(elf = elf, hex = hex, size = size),
     ]
 
 avr_firmware = rule(
