@@ -17,6 +17,7 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//avr/private:hosts.bzl", "SUPPORTED_HOSTS", "detect_host_key")  # buildifier: disable=bzl-visibility
 load("//cc/private:archives.bzl", "AVR_CANONICAL_DISTROS", "canonical_archive_url")
+load("//cc/private:repositories.bzl", "avr_cc_toolchains")
 
 _toolchain_tag = tag_class(
     doc = "Configures the AVR toolchain distribution.",
@@ -84,6 +85,8 @@ def _avr_impl(module_ctx):
 
         for toolchain_tag in mod.tags.toolchain:
             _avr_toolchain_repos(toolchain_tag, host_key)
+
+    avr_cc_toolchains()
 
 avr = module_extension(
     implementation = _avr_impl,

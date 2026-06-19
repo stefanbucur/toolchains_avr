@@ -64,8 +64,9 @@ avr_gcc = use_extension("@avr//cc:extensions.bzl", "avr")
 avr_gcc.toolchain(
     distro = "avr-toolchain-gcc15.2.0-libc2.3.1-binutils2.46",
 )
+use_repo(avr_gcc, "avr_cc_toolchains")
 
-register_toolchains("@avr//cc/toolchain:all")
+register_toolchains("@avr_cc_toolchains//:all")
 ```
 
 ### 3. Write the first source file and BUILD

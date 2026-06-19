@@ -13,8 +13,6 @@
 # limitations under the License.
 
 load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
-load("@rules_cc//cc/toolchains:toolchain.bzl", "cc_toolchain")
-load("//avr/private:hosts.bzl", "SUPPORTED_HOSTS")  # buildifier: disable=bzl-visibility
 load("//avr/private:mcus.bzl", "AVR_MCUS")  # buildifier: disable=bzl-visibility
 
 package(default_visibility = ["//visibility:public"])
@@ -54,35 +52,3 @@ cc_args(
         for mcu in AVR_MCUS
     }),
 )
-
-# Toolchains.
-################################################################################
-
-[
-    cc_toolchain(
-        name = "avr_impl_%s" % host,
-        args = [
-            ":no_absolute_paths_for_builtins",
-            ":optimize_for_size",
-            ":mcu_args",
-        ],
-        enabled_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
-        known_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
-        tool_map = "%s//:all_tools" % SUPPORTED_HOSTS[host].cc_repo,
-    )
-    for host in SUPPORTED_HOSTS
-]
-
-[
-    toolchain(
-        name = "avr_toolchain_%s" % host,
-        exec_compatible_with = SUPPORTED_HOSTS[host].constraint_values,
-        target_compatible_with = [
-            "@toolchains_avr//avr/platform:cpu_avr",
-            "@platforms//os:none",
-        ],
-        toolchain = ":avr_impl_%s" % host,
-        toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
-    )
-    for host in SUPPORTED_HOSTS
-]
