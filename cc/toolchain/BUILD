@@ -13,6 +13,7 @@
 # limitations under the License.
 
 load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
+load("@rules_cc//cc/toolchains:args_list.bzl", "cc_args_list")
 load("//avr/private:mcus.bzl", "AVR_MCUS")  # buildifier: disable=bzl-visibility
 
 package(default_visibility = ["//visibility:public"])
@@ -51,4 +52,13 @@ cc_args(
         "//avr/platform:%s" % mcu: ["-mmcu=%s" % mcu]
         for mcu in AVR_MCUS
     }),
+)
+
+cc_args_list(
+    name = "default_avr_args",
+    args = [
+        ":no_absolute_paths_for_builtins",
+        ":optimize_for_size",
+        ":mcu_args",
+    ],
 )

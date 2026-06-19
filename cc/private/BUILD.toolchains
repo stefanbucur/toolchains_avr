@@ -18,11 +18,7 @@ load("@toolchains_avr//avr/private:hosts.bzl", "SUPPORTED_HOSTS")  # buildifier:
 [
     cc_toolchain(
         name = "avr_impl_%s" % host,
-        args = [
-            "@toolchains_avr//cc/toolchain:no_absolute_paths_for_builtins",
-            "@toolchains_avr//cc/toolchain:optimize_for_size",
-            "@toolchains_avr//cc/toolchain:mcu_args",
-        ],
+        args = ["@toolchains_avr//cc/toolchain:default_avr_args"],
         enabled_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
         known_features = ["@rules_cc//cc/toolchains/args:experimental_replace_legacy_action_config_features"],
         tool_map = "%s//:all_tools" % SUPPORTED_HOSTS[host].cc_repo,
