@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@rules_cc//cc/toolchains:actions.bzl", "cc_action_type")
 load("@rules_cc//cc/toolchains:args.bzl", "cc_args")
 load("@rules_cc//cc/toolchains:args_list.bzl", "cc_args_list")
 load("//avr/private:mcus.bzl", "AVR_MCUS")  # buildifier: disable=bzl-visibility
+load("//cc:avr_action_names.bzl", "AVR_ACTION_NAMES")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -61,4 +63,17 @@ cc_args_list(
         ":optimize_for_size",
         ":mcu_args",
     ],
+)
+
+# Actions.
+################################################################################
+
+cc_action_type(
+    name = "avr_nm",
+    action_name = AVR_ACTION_NAMES.avr_nm,
+)
+
+cc_action_type(
+    name = "avr_size",
+    action_name = AVR_ACTION_NAMES.avr_size,
 )
