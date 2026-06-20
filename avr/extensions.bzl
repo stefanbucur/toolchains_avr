@@ -56,37 +56,15 @@ _rust_toolchain_tag = tag_class(
             doc = "The nightly ISO date (YYYY-MM-DD) of the Rust compiler to use.",
             default = "2026-03-21",
         ),
-    },
-)
+        "src_sha256": attr.string(
+            doc = "SHA256 of the rust-src-nightly.tar.xz archive for the given nightly_stamp.",
+            default = "",
+        ),
+        "tools_sha256s": attr.string_dict(
+            doc = """SHA256 checksums for nightly Rust host tool archives, all platforms.
 
-_nightly_src_repo_tag = tag_class(
-    doc = "Pins SHA256 checksums for the nightly rust-src archive (platform-independent).",
-    attrs = {
-        "stamp": attr.string(
-            doc = "The nightly ISO date (YYYY-MM-DD) these checksums apply to.",
-            mandatory = True,
-        ),
-        "checksums": attr.string_dict(
-            doc = "Mapping of archive filename to its SHA256 checksum.",
-            default = {},
-        ),
-    },
-)
-
-_nightly_host_repo_tag = tag_class(
-    doc = "Pins SHA256 checksums for a nightly Rust host toolchain archive.",
-    attrs = {
-        "stamp": attr.string(
-            doc = "The nightly ISO date (YYYY-MM-DD) these checksums apply to.",
-            mandatory = True,
-        ),
-        "platform": attr.string(
-            doc = "The host platform key. Must be one of the supported host keys.",
-            mandatory = True,
-            values = [k for k in SUPPORTED_HOSTS],
-        ),
-        "checksums": attr.string_dict(
-            doc = "Mapping of archive filename to its SHA256 checksum.",
+Keys are '<stamp>/<archive>' (e.g. '2026-06-18/rustc-nightly-aarch64-apple-darwin.tar.xz').
+""",
             default = {},
         ),
     },
@@ -138,24 +116,14 @@ def _avr_impl(module_ctx):
         for tag in mod.tags.cc_toolchain:
             _avr_cc_toolchain_repos(tag, host_key)
 
-        src_checksums = {}
-        for tag in mod.tags.nightly_src_repo:
-            src_checksums[tag.stamp] = dict(tag.checksums)
-
-        host_checksums = {}
-        for tag in mod.tags.nightly_host_repo:
-            if tag.stamp not in host_checksums:
-                host_checksums[tag.stamp] = {}
-            host_checksums[tag.stamp][tag.platform] = dict(tag.checksums)
-
         for tag in mod.tags.rust_toolchain:
             avr_rust_toolchains(
                 nightly_stamp = tag.nightly_stamp,
                 analyzer_version = tag.analyzer_version,
                 edition = tag.edition,
                 host_key = host_key,
-                src_checksums = src_checksums,
-                host_checksums = host_checksums,
+                src_sha256 = tag.src_sha256,
+                tools_sha256s = tag.tools_sha256s,
             )
 
     avr_cc_toolchains()
@@ -167,7 +135,5 @@ avr = module_extension(
     tag_classes = {
         "cc_toolchain": _cc_toolchain_tag,
         "rust_toolchain": _rust_toolchain_tag,
-        "nightly_src_repo": _nightly_src_repo_tag,
-        "nightly_host_repo": _nightly_host_repo_tag,
     },
 )

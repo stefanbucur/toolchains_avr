@@ -35,12 +35,12 @@ _avr_rust_toolchains_repo = repository_rule(
     },
 )
 
-def _rust_src_repo(nightly_stamp, src_checksums):
+def _rust_src_repo(nightly_stamp, src_sha256):
     http_archive(
         name = "avr_rust_src",
         build_file = "//rust/private:BUILD.rust_src",
         urls = ["https://static.rust-lang.org/dist/%s/rust-src-nightly.tar.xz" % nightly_stamp],
-        sha256 = src_checksums.get(nightly_stamp, {}).get("rust-src-nightly.tar.xz", ""),
+        sha256 = src_sha256,
         strip_prefix = "rust-src-nightly",
         type = "tar.xz",
     )
@@ -51,15 +51,10 @@ def _rust_analyzer_repo(analyzer_version):
         version = analyzer_version,
     )
 
-def _rust_compiler_repos(nightly_stamp, edition, host_key, host_checksums):
+def _rust_compiler_repos(nightly_stamp, edition, host_key, tools_sha256s):
     for host in SUPPORTED_HOSTS:
         rust_triple = SUPPORTED_HOSTS[host].rust_triple
         repo_name = SUPPORTED_HOSTS[host].rust_repo.removeprefix("@")
-        raw = host_checksums.get(nightly_stamp, {}).get(host, {})
-        host_sha256s = {
-            "%s/%s" % (nightly_stamp, archive): sha
-            for archive, sha in raw.items()
-        }
         rust_toolchain_tools_repository(
             name = repo_name,
             exec_triple = rust_triple,
@@ -67,7 +62,7 @@ def _rust_compiler_repos(nightly_stamp, edition, host_key, host_checksums):
             version = "nightly/" + nightly_stamp,
             edition = edition,
             rustfmt_version = "nightly/" + nightly_stamp,
-            sha256s = host_sha256s,
+            sha256s = tools_sha256s,
         )
         if host == host_key:
             rust_toolchain_tools_repository(
@@ -77,10 +72,10 @@ def _rust_compiler_repos(nightly_stamp, edition, host_key, host_checksums):
                 version = "nightly/" + nightly_stamp,
                 edition = edition,
                 rustfmt_version = "nightly/" + nightly_stamp,
-                sha256s = host_sha256s,
+                sha256s = tools_sha256s,
             )
 
-def avr_rust_toolchains(nightly_stamp, analyzer_version, edition, host_key, src_checksums, host_checksums):
+def avr_rust_toolchains(nightly_stamp, analyzer_version, edition, host_key, src_sha256, tools_sha256s):
     """Instantiates all repositories needed by the AVR Rust toolchain.
 
     Args:
@@ -88,10 +83,10 @@ def avr_rust_toolchains(nightly_stamp, analyzer_version, edition, host_key, src_
         analyzer_version: The version of rust-analyzer to fetch.
         edition: The default Rust edition.
         host_key: The key from SUPPORTED_HOSTS identifying the current host platform.
-        src_checksums: Dict mapping stamp to {filename: sha256} for the rust-src archive.
-        host_checksums: Dict mapping stamp to {platform: {filename: sha256}} for host archives.
+        src_sha256: SHA256 of the rust-src-nightly.tar.xz archive.
+        tools_sha256s: Dict of '<stamp>/<archive>' to sha256 for all host tool archives.
     """
-    _rust_src_repo(nightly_stamp, src_checksums)
+    _rust_src_repo(nightly_stamp, src_sha256)
     _rust_analyzer_repo(analyzer_version)
-    _rust_compiler_repos(nightly_stamp, edition, host_key, host_checksums)
+    _rust_compiler_repos(nightly_stamp, edition, host_key, tools_sha256s)
     _avr_rust_toolchains_repo(name = "avr_rust_toolchains")
