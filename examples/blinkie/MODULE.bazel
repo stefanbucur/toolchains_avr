@@ -19,11 +19,11 @@ local_path_override(
     path = "../..",
 )
 
-avr_gcc = use_extension("@avr//cc:extensions.bzl", "avr")
-avr_gcc.toolchain(
+avr = use_extension("@avr//avr:extensions.bzl", "avr")
+avr.cc_toolchain(
     distro = "avr-toolchain-gcc15.2.0-libc2.3.1-binutils2.46",
 )
-use_repo(avr_gcc, "avr_cc_toolchains")
+use_repo(avr, "avr_cc_toolchains")
 
 register_toolchains("@avr_cc_toolchains//:all")
 

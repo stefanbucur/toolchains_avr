@@ -12,12 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Module extension for the AVR Rust toolchain."""
+"""Unified module extension for the AVR C++ and Rust toolchains."""
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//avr/private:hosts.bzl", "SUPPORTED_HOSTS", "detect_host_key")  # buildifier: disable=bzl-visibility
+load("//cc/private:archives.bzl", "AVR_CANONICAL_DISTROS", "canonical_archive_url")  # buildifier: disable=bzl-visibility
+load("//cc/private:repositories.bzl", "avr_cc_toolchains")  # buildifier: disable=bzl-visibility
 load("//rust/private:repositories.bzl", "avr_rust_toolchains")  # buildifier: disable=bzl-visibility
 
-_toolchain_tag = tag_class(
+_cc_toolchain_tag = tag_class(
+    doc = "Configures the AVR C++ toolchain distribution.",
+    attrs = {
+        "distro": attr.string(
+            doc = "The name of the AVR toolchain archive.",
+            mandatory = False,
+            values = AVR_CANONICAL_DISTROS,
+        ),
+        "custom_archives": attr.string_dict(
+            doc = """A mapping of host architecture to custom archive URLs.
+
+This can be used to override the default archive for specific architectures.
+
+Syntax: `<url>[|sha256:<sha256>]`
+""",
+            mandatory = False,
+            default = {},
+        ),
+    },
+)
+
+_rust_toolchain_tag = tag_class(
     doc = "Configures the AVR Rust toolchain.",
     attrs = {
         "analyzer_version": attr.string(
@@ -68,11 +92,51 @@ _nightly_host_repo_tag = tag_class(
     },
 )
 
+def _parse_url_string(url_string):
+    if "|" in url_string:
+        url, sha256_part = url_string.rsplit("|", 1)
+        if not sha256_part.startswith("sha256:"):
+            fail("Invalid custom archive format for URL '%s'" % url_string)
+        sha256 = sha256_part.removeprefix("sha256:")
+        return url, sha256
+    else:
+        return url_string, None
+
+def _avr_cc_toolchain_repos(toolchain_tag, host_key):
+    for host in SUPPORTED_HOSTS:
+        custom_archive_url = toolchain_tag.custom_archives.get(host, "")
+        if custom_archive_url:
+            url, sha256 = _parse_url_string(custom_archive_url)
+        else:
+            if not toolchain_tag.distro:
+                fail("No distribution specified for AVR toolchain and no custom archive provided for host '%s'." % host)
+            url, sha256 = canonical_archive_url(toolchain_tag.distro, host)
+
+        http_archive(
+            name = SUPPORTED_HOSTS[host].cc_repo.removeprefix("@"),
+            build_file = "//cc/toolchain:BUILD.distro_files",
+            urls = [url],
+            strip_prefix = "usr/local/avr",
+            sha256 = sha256,
+        )
+
+        if host == host_key:
+            http_archive(
+                name = "avr_gcc_host_tools",
+                build_file = "//cc/toolchain:BUILD.distro_files",
+                urls = [url],
+                strip_prefix = "usr/local/avr",
+                sha256 = sha256,
+            )
+
 def _avr_impl(module_ctx):
     host_key = detect_host_key(module_ctx)
     for mod in module_ctx.modules:
         if not mod.is_root:
             continue
+
+        for tag in mod.tags.cc_toolchain:
+            _avr_cc_toolchain_repos(tag, host_key)
 
         src_checksums = {}
         for tag in mod.tags.nightly_src_repo:
@@ -84,22 +148,25 @@ def _avr_impl(module_ctx):
                 host_checksums[tag.stamp] = {}
             host_checksums[tag.stamp][tag.platform] = dict(tag.checksums)
 
-        for toolchain_tag in mod.tags.toolchain:
+        for tag in mod.tags.rust_toolchain:
             avr_rust_toolchains(
-                nightly_stamp = toolchain_tag.nightly_stamp,
-                analyzer_version = toolchain_tag.analyzer_version,
-                edition = toolchain_tag.edition,
+                nightly_stamp = tag.nightly_stamp,
+                analyzer_version = tag.analyzer_version,
+                edition = tag.edition,
                 host_key = host_key,
                 src_checksums = src_checksums,
                 host_checksums = host_checksums,
             )
+
+    avr_cc_toolchains()
 
 avr = module_extension(
     implementation = _avr_impl,
     os_dependent = True,
     arch_dependent = True,
     tag_classes = {
-        "toolchain": _toolchain_tag,
+        "cc_toolchain": _cc_toolchain_tag,
+        "rust_toolchain": _rust_toolchain_tag,
         "nightly_src_repo": _nightly_src_repo_tag,
         "nightly_host_repo": _nightly_host_repo_tag,
     },

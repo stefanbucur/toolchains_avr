@@ -60,11 +60,11 @@ Create `MODULE.bazel` to declare `toolchains_avr` as a dependency and configure 
 bazel_dep(name = "rules_cc", version = "0.2.17")
 bazel_dep(name = "toolchains_avr", version = "0.1.0", repo_name = "avr")
 
-avr_gcc = use_extension("@avr//cc:extensions.bzl", "avr")
-avr_gcc.toolchain(
+avr = use_extension("@avr//avr:extensions.bzl", "avr")
+avr.cc_toolchain(
     distro = "avr-toolchain-gcc15.2.0-libc2.3.1-binutils2.46",
 )
-use_repo(avr_gcc, "avr_cc_toolchains")
+use_repo(avr, "avr_cc_toolchains")
 
 register_toolchains("@avr_cc_toolchains//:all")
 ```
