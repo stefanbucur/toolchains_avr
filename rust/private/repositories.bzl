@@ -16,7 +16,7 @@
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@rules_rust//rust:repositories.bzl", "rust_analyzer_toolchain_tools_repository", "rust_toolchain_tools_repository")
-load("//avr/private:hosts.bzl", "SUPPORTED_HOSTS")  # buildifier: disable=bzl-visibility
+load("//avr:hosts.bzl", "SUPPORTED_HOSTS")
 
 def _avr_rust_toolchains_repo_impl(repository_ctx):
     build_content = repository_ctx.read(

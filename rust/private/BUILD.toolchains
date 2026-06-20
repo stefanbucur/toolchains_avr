@@ -13,7 +13,7 @@
 # limitations under the License.
 
 load("@rules_rust//rust:toolchain.bzl", "rust_analyzer_toolchain", "rust_stdlib_filegroup", "rust_toolchain")
-load("@toolchains_avr//avr/private:hosts.bzl", "SUPPORTED_HOSTS")  # buildifier: disable=bzl-visibility
+load("@toolchains_avr//avr:hosts.bzl", "SUPPORTED_HOSTS")
 load("@toolchains_avr//avr/private:mcus.bzl", "AVR_MCUS")  # buildifier: disable=bzl-visibility
 load("@toolchains_avr//rust/private:sysroot.bzl", "rust_toolchain_sysroot")  # buildifier: disable=bzl-visibility
 

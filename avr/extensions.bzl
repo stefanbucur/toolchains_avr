@@ -15,7 +15,7 @@
 """Unified module extension for the AVR C++ and Rust toolchains."""
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//avr/private:hosts.bzl", "SUPPORTED_HOSTS", "detect_host_key")  # buildifier: disable=bzl-visibility
+load("//avr:hosts.bzl", "SUPPORTED_HOSTS", "detect_host_key")
 load("//cc/private:archives.bzl", "AVR_CANONICAL_DISTROS", "canonical_archive_url")  # buildifier: disable=bzl-visibility
 load("//cc/private:repositories.bzl", "avr_cc_toolchains")  # buildifier: disable=bzl-visibility
 load("//rust/private:repositories.bzl", "avr_rust_toolchains")  # buildifier: disable=bzl-visibility
