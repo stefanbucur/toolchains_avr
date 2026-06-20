@@ -14,9 +14,8 @@
 
 """Unified module extension for the AVR C++ and Rust toolchains."""
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//avr:hosts.bzl", "SUPPORTED_HOSTS", "detect_host_key")
-load("//cc/private:archives.bzl", "AVR_CANONICAL_DISTROS", "canonical_archive_url")  # buildifier: disable=bzl-visibility
+load("//avr:hosts.bzl", "detect_host_key")
+load("//cc/private:archives.bzl", "AVR_CANONICAL_DISTROS")  # buildifier: disable=bzl-visibility
 load("//cc/private:repositories.bzl", "avr_cc_toolchains")  # buildifier: disable=bzl-visibility
 load("//rust/private:repositories.bzl", "avr_rust_toolchains")  # buildifier: disable=bzl-visibility
 
@@ -70,43 +69,6 @@ Keys are '<stamp>/<archive>' (e.g. '2026-06-18/rustc-nightly-aarch64-apple-darwi
     },
 )
 
-def _parse_url_string(url_string):
-    if "|" in url_string:
-        url, sha256_part = url_string.rsplit("|", 1)
-        if not sha256_part.startswith("sha256:"):
-            fail("Invalid custom archive format for URL '%s'" % url_string)
-        sha256 = sha256_part.removeprefix("sha256:")
-        return url, sha256
-    else:
-        return url_string, None
-
-def _avr_cc_toolchain_repos(toolchain_tag, host_key):
-    for host in SUPPORTED_HOSTS:
-        custom_archive_url = toolchain_tag.custom_archives.get(host, "")
-        if custom_archive_url:
-            url, sha256 = _parse_url_string(custom_archive_url)
-        else:
-            if not toolchain_tag.distro:
-                fail("No distribution specified for AVR toolchain and no custom archive provided for host '%s'." % host)
-            url, sha256 = canonical_archive_url(toolchain_tag.distro, host)
-
-        http_archive(
-            name = SUPPORTED_HOSTS[host].cc_repo.removeprefix("@"),
-            build_file = "//cc/toolchain:BUILD.distro_files",
-            urls = [url],
-            strip_prefix = "usr/local/avr",
-            sha256 = sha256,
-        )
-
-        if host == host_key:
-            http_archive(
-                name = "avr_gcc_host_tools",
-                build_file = "//cc/toolchain:BUILD.distro_files",
-                urls = [url],
-                strip_prefix = "usr/local/avr",
-                sha256 = sha256,
-            )
-
 def _avr_impl(module_ctx):
     host_key = detect_host_key(module_ctx)
     for mod in module_ctx.modules:
@@ -114,7 +76,11 @@ def _avr_impl(module_ctx):
             continue
 
         for tag in mod.tags.cc_toolchain:
-            _avr_cc_toolchain_repos(tag, host_key)
+            avr_cc_toolchains(
+                distro = tag.distro,
+                custom_archives = tag.custom_archives,
+                host_key = host_key,
+            )
 
         for tag in mod.tags.rust_toolchain:
             avr_rust_toolchains(
@@ -125,8 +91,6 @@ def _avr_impl(module_ctx):
                 src_sha256 = tag.src_sha256,
                 tools_sha256s = tag.tools_sha256s,
             )
-
-    avr_cc_toolchains()
 
 avr = module_extension(
     implementation = _avr_impl,
