@@ -111,14 +111,17 @@ rust_analyzer_toolchain(
     for host_key in SUPPORTED_HOSTS
 ]
 
-# Per-host host rust toolchain registrations
+# Per-host host rust toolchain registrations.
+# Matches any nightly build — AVR exec contexts (proc-macros for AVR firmware)
+# and plain host nightly targets (fempto CLI, device/codegen) — so that all
+# proc-macro .so files are compiled with the same nightly rustc that
+# rust-analyzer's proc_macro_srv uses, preventing ABI mismatches in IDEs.
 [
     toolchain(
         name = "host_rust_toolchain_%s_def" % host_key,
         exec_compatible_with = SUPPORTED_HOSTS[host_key].constraint_values,
         target_settings = [
             "@rules_rust//rust/toolchain/channel:nightly",
-            "@toolchains_avr//rust/config:is_avr",
         ],
         toolchain = "%s//:rust_toolchain" % SUPPORTED_HOSTS[host_key].rust_repo,
         toolchain_type = "@rules_rust//rust:toolchain",

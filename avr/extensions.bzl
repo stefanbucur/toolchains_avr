@@ -44,8 +44,8 @@ _rust_toolchain_tag = tag_class(
     doc = "Configures the AVR Rust toolchain.",
     attrs = {
         "analyzer_version": attr.string(
-            doc = "The version of rust-analyzer to use.",
-            default = "1.94.0",
+            doc = "The version of rust-analyzer to use. Defaults to 'nightly/<nightly_stamp>'.",
+            default = "",
         ),
         "edition": attr.string(
             doc = "The default Rust edition for targets that do not specify one.",
@@ -83,9 +83,10 @@ def _avr_impl(module_ctx):
             )
 
         for tag in mod.tags.rust_toolchain:
+            analyzer_version = tag.analyzer_version or ("nightly/" + tag.nightly_stamp)
             avr_rust_toolchains(
                 nightly_stamp = tag.nightly_stamp,
-                analyzer_version = tag.analyzer_version,
+                analyzer_version = analyzer_version,
                 edition = tag.edition,
                 host_key = host_key,
                 src_sha256 = tag.src_sha256,
