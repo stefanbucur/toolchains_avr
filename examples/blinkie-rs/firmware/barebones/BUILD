@@ -16,13 +16,13 @@ load("@avr//avr:defs.bzl", "avrdude_flash")
 load("@avr//rust:defs.bzl", "avr_rust_binary")
 
 avr_rust_binary(
-    name = "hello",
-    srcs = ["hello_main.rs"],
+    name = "barebones",
+    srcs = ["src/main.rs"],
     compatible_mcus = ["avr128db48"],
 )
 
 avrdude_flash(
     name = "flash",
-    src = ":hello",
+    src = ":barebones",
     programmer = "pkobn_updi",
 )

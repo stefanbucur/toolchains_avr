@@ -36,29 +36,8 @@ avr.cc_toolchain(
 avr.rust_toolchain(
     edition = "2024",
     nightly_stamp = "2026-06-18",
-    src_sha256 = "f6eaf06ff6eeff09750219bd29ea9ad96139d46a884a4179d3ac3fe23bd84e8e",
-    tools_sha256s = {
-        "2026-06-18/cargo-nightly-aarch64-apple-darwin.tar.xz": "3d42aaa1a6324521b0c0a962a09cf9cf50fa82b33b63da30331e911e67f5be9b",
-        "2026-06-18/cargo-nightly-aarch64-unknown-linux-gnu.tar.xz": "b07388440d1074971b5a6017a09bbe48fac729db2d0bd09aa732ddd8e594e015",
-        "2026-06-18/cargo-nightly-x86_64-unknown-linux-gnu.tar.xz": "8a28c8bf2bc040bdd708b3fb498e602d13b266ffc2db430429aa22074e629298",
-        "2026-06-18/clippy-nightly-aarch64-apple-darwin.tar.xz": "03388bd14b5a1775c66c9b93ff7582fd5bb32b129f7aed7150baf85c8ff581cc",
-        "2026-06-18/clippy-nightly-aarch64-unknown-linux-gnu.tar.xz": "c5f2a8592e4e14eab74727116e576afd99bec6989cb4e44640199f2d7936ee18",
-        "2026-06-18/clippy-nightly-x86_64-unknown-linux-gnu.tar.xz": "2cc0142a564371bd3a0b65318455801641243d2dc891e37306857b1ce6ff452f",
-        "2026-06-18/llvm-tools-nightly-aarch64-apple-darwin.tar.xz": "aef00b81eb2e96df663020ef03089e1faa6e0099c07d8fdf512c16c2948beadb",
-        "2026-06-18/llvm-tools-nightly-aarch64-unknown-linux-gnu.tar.xz": "111a3f9ef5656e9fb8ea1f7a3567a12fea8a9e5d0ff5f715ed280b4c6f721807",
-        "2026-06-18/llvm-tools-nightly-x86_64-unknown-linux-gnu.tar.xz": "2125a161da4e18f0c00fc6bb4f4b28729f6c8e33c6691973e29c99a6dc06f036",
-        "2026-06-18/rust-std-nightly-aarch64-apple-darwin.tar.xz": "a02dbb52a22533c1e3ad2d7054a64128660402acddc70a5d2a8520742896ec3b",
-        "2026-06-18/rust-std-nightly-aarch64-unknown-linux-gnu.tar.xz": "1d95cc7684d32679a113979c8e4688cf28c67dcf4db6be55a1fb87560f7761d2",
-        "2026-06-18/rust-std-nightly-x86_64-unknown-linux-gnu.tar.xz": "2684fb3c942499172d36de43baaa0facf055827de5de6d25497be0787950bd28",
-        "2026-06-18/rustc-nightly-aarch64-apple-darwin.tar.xz": "9efd84a1fe2f74611c9fc4725823d6702bb6080077cb8be8a18d5e8b8c11c580",
-        "2026-06-18/rustc-nightly-aarch64-unknown-linux-gnu.tar.xz": "e467d850c90d724541fda6f6a4505086435c24d4e96fd0b9a772f8144fbb8489",
-        "2026-06-18/rustc-nightly-x86_64-unknown-linux-gnu.tar.xz": "1597d5c5d74237b2f4d7fbd13b76ff9e4d0f6cc9d4359b9f8947b466faeea8a8",
-        "2026-06-18/rustfmt-nightly-aarch64-apple-darwin.tar.xz": "b73ae56215fa574f8367498483f77cd8df5f1b4eaf44f57d577d3f182875cd9a",
-        "2026-06-18/rustfmt-nightly-aarch64-unknown-linux-gnu.tar.xz": "65f2f09a6102d0d21689d464afe5a190da69d76e6be360f4d0d03fac20c2d894",
-        "2026-06-18/rustfmt-nightly-x86_64-unknown-linux-gnu.tar.xz": "355de3bb7c6aaed5b681bf6b50443ae99278988816d2e50397a2b77d41f67195",
-    },
 )
-use_repo(avr, "avr_cc_toolchains", "avr_rust_toolchains")
+use_repo(avr, "avr_cc_toolchains", "avr_rust_analyzer_tools", "avr_rust_host_tools", "avr_rust_toolchains")
 
 register_toolchains(
     "@avr_cc_toolchains//:all",
@@ -72,3 +51,22 @@ rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
 rust.toolchain(
     target_settings = ["@avr//rust/config:is_host"],
 )
+
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+crate.spec(
+    package = "avr-device",
+    git = "https://github.com/Rahix/avr-device",
+    branch = "main",
+    features = [
+        "avr128db48",
+        "rt",
+    ],
+)
+crate.render_config(
+    generate_target_compatible_with = False,
+)
+crate.from_specs(
+    name = "avr_crates",
+    host_tools = "@avr_rust_host_tools",
+)
+use_repo(crate, "avr_crates")

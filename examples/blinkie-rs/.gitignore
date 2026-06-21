@@ -1,4 +1,5 @@
 /bazel-*
 /compile_commands.json
+/rust-project.json
 
 MODULE.bazel.lock

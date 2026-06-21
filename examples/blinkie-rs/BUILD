@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@avr//rust:rust_project.bzl", "avr_rust_project")
+
 platform(
     name = "curiosity_board",
     constraint_values = [
@@ -21,10 +23,13 @@ platform(
     ],
 )
 
-# Build the discover_rust_project binary used by discover_rust_project.sh.
-# Run once after cloning or updating rules_rust:
-#   bazel build //:discover_rust_project
-alias(
-    name = "discover_rust_project",
-    actual = "@rules_rust//tools/rust_analyzer:discover_bazel_rust_project",
+# IDE support: `bazel run //:rust_project` regenerates rust-project.json so
+# rust-analyzer (Zed, VS Code, ...) sees the AVR sysroot, crate graph, and
+# proc-macros. Rerun after changing targets or dependencies.
+avr_rust_project(
+    name = "rust_project",
+    targets = [
+        "//firmware/barebones:barebones",
+        "//firmware/hello:hello",
+    ],
 )
