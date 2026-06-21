@@ -15,5 +15,6 @@
 exports_files([
     "BUILD.rust_src",
     "BUILD.toolchains",
+    "gen_rust_project.sh",
     "sysroot.bzl",
 ])
