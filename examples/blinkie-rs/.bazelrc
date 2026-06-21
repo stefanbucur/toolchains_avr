@@ -1,1 +1,6 @@
+# Use nightly for all Rust builds so rust-analyzer's proc_macro_srv and the
+# compiler use the same rustc.  AVR targets already force nightly via the
+# avr_firmware transition, so this only affects discovery and host tools.
+build --@rules_rust//rust/toolchain/channel=nightly
+
 build:avr --platforms=//:curiosity_board

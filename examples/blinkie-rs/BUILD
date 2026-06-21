@@ -20,3 +20,11 @@ platform(
         "@avr//avr/platform:avr128db48",
     ],
 )
+
+# Build the discover_rust_project binary used by discover_rust_project.sh.
+# Run once after cloning or updating rules_rust:
+#   bazel build //:discover_rust_project
+alias(
+    name = "discover_rust_project",
+    actual = "@rules_rust//tools/rust_analyzer:discover_bazel_rust_project",
+)

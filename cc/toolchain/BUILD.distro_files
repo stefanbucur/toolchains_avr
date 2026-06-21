@@ -37,6 +37,7 @@ cc_tool_map(
         "@rules_cc//cc/toolchains/actions:link_actions": ":g++",
         "@rules_cc//cc/toolchains/actions:objcopy_embed_data": ":objcopy",
         "@toolchains_avr//cc/toolchain:avr_nm": ":nm",
+        "@toolchains_avr//cc/toolchain:avr_objdump": ":objdump",
         "@toolchains_avr//cc/toolchain:avr_size": ":size",
     },
 )
@@ -68,6 +69,12 @@ cc_tool(
 cc_tool(
     name = "nm",
     src = ":bin/avr-nm",
+    data = [":all_files"],
+)
+
+cc_tool(
+    name = "objdump",
+    src = ":bin/avr-objdump",
     data = [":all_files"],
 )
 

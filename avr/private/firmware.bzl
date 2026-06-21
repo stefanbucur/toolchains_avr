@@ -20,8 +20,9 @@ load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("//cc:avr_action_names.bzl", "AVR_ACTION_NAMES")
 
 AvrFirmwareInfo = provider(
-    doc = "Provides the ELF, Intel HEX, and size report outputs of an avr_firmware target.",
+    doc = "Provides the ELF, Intel HEX, disassembly, and size report outputs of an avr_firmware target.",
     fields = {
+        "asm": "The disassembled listing (.asm) output file.",
         "elf": "The .elf output file.",
         "hex": "The Intel HEX (.hex) output file.",
         "size": "The avr-size report (.size) output file.",
@@ -52,6 +53,7 @@ def _avr_firmware_impl(ctx):
     src = ctx.file.src
     elf = ctx.actions.declare_file(ctx.label.name + ".elf")
     ctx.actions.symlink(output = elf, target_file = src)
+    asm = ctx.actions.declare_file(ctx.label.name + ".asm")
     hex = ctx.actions.declare_file(ctx.label.name + ".hex")
     size = ctx.actions.declare_file(ctx.label.name + ".size")
     feature_configuration = cc_common.configure_features(
@@ -71,6 +73,21 @@ def _avr_firmware_impl(ctx):
         mnemonic = "AvrObjcopy",
         progress_message = "Generating AVR hex {} from {}".format(hex.path, src.path),
     )
+    avr_objdump = cc_common.get_tool_for_action(
+        feature_configuration = feature_configuration,
+        action_name = AVR_ACTION_NAMES.avr_objdump,
+    )
+    ctx.actions.run_shell(
+        inputs = [src] + tool_inputs,
+        outputs = [asm],
+        command = "{avr_objdump} -d -S {elf} > {out}".format(
+            avr_objdump = avr_objdump,
+            elf = src.path,
+            out = asm.path,
+        ),
+        mnemonic = "AvrObjdump",
+        progress_message = "Disassembling AVR ELF {}".format(src.path),
+    )
     avr_size = cc_common.get_tool_for_action(
         feature_configuration = feature_configuration,
         action_name = AVR_ACTION_NAMES.avr_size,
@@ -87,8 +104,8 @@ def _avr_firmware_impl(ctx):
         progress_message = "Computing AVR size for {}".format(src.path),
     )
     return [
-        DefaultInfo(files = depset([elf, hex, size])),
-        AvrFirmwareInfo(elf = elf, hex = hex, size = size),
+        DefaultInfo(files = depset([elf, asm, hex, size])),
+        AvrFirmwareInfo(asm = asm, elf = elf, hex = hex, size = size),
     ]
 
 avr_firmware = rule(

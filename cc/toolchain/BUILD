@@ -74,6 +74,11 @@ cc_action_type(
 )
 
 cc_action_type(
+    name = "avr_objdump",
+    action_name = AVR_ACTION_NAMES.avr_objdump,
+)
+
+cc_action_type(
     name = "avr_size",
     action_name = AVR_ACTION_NAMES.avr_size,
 )

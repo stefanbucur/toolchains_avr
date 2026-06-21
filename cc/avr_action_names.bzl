@@ -16,5 +16,6 @@
 
 AVR_ACTION_NAMES = struct(
     avr_nm = "avr-nm",
+    avr_objdump = "avr-objdump",
     avr_size = "avr-size",
 )
