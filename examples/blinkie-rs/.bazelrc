@@ -1,0 +1,1 @@
+build:avr --platforms=//:curiosity_board
