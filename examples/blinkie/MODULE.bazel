@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-bazel_dep(name = "rules_cc", version = "0.2.17")
+bazel_dep(name = "rules_cc", version = "0.2.19")
 bazel_dep(name = "toolchains_avr", version = "0.0.0", repo_name = "avr")
 local_path_override(
     module_name = "toolchains_avr",

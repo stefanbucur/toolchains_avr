@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("@avr//avr:defs.bzl", "avrdude_flash")
 load("@avr//cc:defs.bzl", "avr_cc_binary")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
@@ -35,4 +36,10 @@ avr_cc_binary(
         ":button",
         ":led",
     ],
+)
+
+avrdude_flash(
+    name = "flash",
+    src = ":pulse_led",
+    programmer = "pkobn_updi",
 )
