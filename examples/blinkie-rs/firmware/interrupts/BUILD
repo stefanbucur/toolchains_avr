@@ -16,7 +16,7 @@ load("@avr//avr:defs.bzl", "avrdude_flash")
 load("@avr//rust:defs.bzl", "avr_rust_binary")
 
 avr_rust_binary(
-    name = "hello",
+    name = "interrupts",
     srcs = ["src/main.rs"],
     compatible_mcus = ["avr128db48"],
     deps = ["@avr_crates//:avr-device"],
@@ -24,6 +24,6 @@ avr_rust_binary(
 
 avrdude_flash(
     name = "flash",
-    src = ":hello",
+    src = ":interrupts",
     programmer = "pkobn_updi",
 )

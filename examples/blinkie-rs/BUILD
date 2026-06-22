@@ -30,6 +30,7 @@ avr_rust_project(
     name = "rust_project",
     targets = [
         "//firmware/barebones:barebones",
-        "//firmware/hello:hello",
+        "//firmware/basic-pac:basic-pac",
+        "//firmware/interrupts:interrupts",
     ],
 )

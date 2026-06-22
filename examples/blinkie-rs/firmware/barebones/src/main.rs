@@ -1,3 +1,11 @@
+//! Minimal AVR firmware with no support library dependencies. Without a
+//! Peripheral Access Crate (PAC), I/O registers must be accessed directly as
+//! raw pointers using the memory addresses from the MCU datasheet — inherently
+//! unsafe. In practice, vendors publish this data in a structured format (e.g.,
+//! Atmel/Microchip's ATDF files) that tools use to auto-generate safe,
+//! typed register accessors; the [`avr-device`](https://github.com/Rahix/avr-device)
+//! library is one such generated crate for AVR.
+
 #![no_std]
 #![no_main]
 

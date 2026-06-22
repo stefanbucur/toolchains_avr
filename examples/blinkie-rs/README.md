@@ -13,14 +13,26 @@ bazel build -c opt --config=avr //firmware/barebones:barebones
 bazel run --config=avr //firmware/barebones:flash
 ```
 
-### hello
+### basic-pac
 
 `no_std` firmware using the [`avr-device`](https://github.com/Rahix/avr-device)
-PAC crate for typed, safe register access.
+Peripheral Access Crate (PAC) for typed, safe register access.
 
 ```sh
-bazel build -c opt --config=avr //firmware/hello:hello
-bazel run --config=avr //firmware/hello:flash
+bazel build -c opt --config=avr //firmware/basic-pac:basic-pac
+bazel run --config=avr //firmware/basic-pac:flash
+```
+
+### interrupts
+
+Interrupt-driven LED toggle: the button on PB2 triggers a falling-edge port
+interrupt that wakes the CPU from idle sleep, debounces (10 ms), and toggles
+the LED on PB3. Demonstrates `#![feature(abi_avr_interrupt)]`, the
+`#[avr_device::interrupt]` attribute, and `Peripherals::steal()` inside an ISR.
+
+```sh
+bazel build -c opt --config=avr //firmware/interrupts:interrupts
+bazel run --config=avr //firmware/interrupts:flash
 ```
 
 ## IDE support (rust-analyzer)
