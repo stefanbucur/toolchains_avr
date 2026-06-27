@@ -22,7 +22,7 @@ bazel_dep(name = "rules_cc", version = "0.2.19")
 # rules_rust listed before toolchains_avr intentionally — the rust.toolchain
 # target_settings below ensures rules_rust's host toolchain only fires outside
 # of AVR exec configs, so ordering no longer causes a proc-macro ABI mismatch.
-bazel_dep(name = "rules_rust", version = "0.70.0")
+bazel_dep(name = "rules_rust", version = "0.71.1")
 bazel_dep(name = "toolchains_avr", version = "0.0.0", repo_name = "avr")
 local_path_override(
     module_name = "toolchains_avr",
@@ -54,13 +54,13 @@ rust.toolchain(
 
 crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 crate.spec(
-    package = "avr-device",
-    git = "https://github.com/Rahix/avr-device",
     branch = "main",
     features = [
         "avr128db48",
         "rt",
     ],
+    git = "https://github.com/Rahix/avr-device",
+    package = "avr-device",
 )
 crate.render_config(
     generate_target_compatible_with = False,

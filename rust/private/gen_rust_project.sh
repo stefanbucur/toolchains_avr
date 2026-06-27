@@ -61,5 +61,16 @@ cd "$BUILD_WORKSPACE_DIRECTORY"
 echo >&2 "avr_rust_project: fetching rust-analyzer sysroot + proc-macro server ..."
 bazel fetch @avr_rust_host_tools//... @avr_rust_analyzer_tools//... >&2
 
+# Build the crates before emitting the project file. rules_rust 0.71's aspect now
+# records generated-source paths and include_dirs correctly, but gen_rust_project
+# still does not *build* those sources -- it only emits metadata. So a crate whose
+# root is generated (e.g. an avr_device() PAC's `lib.rs`) has its `root_module`
+# pointing at a file that doesn't exist on disk until something compiles the crate,
+# and `device::Peripherals` (anything from a generated crate) fails to resolve.
+# "$@" is `--config <config> <labels...>`, the same flags and targets
+# gen_rust_project sees, so the artifacts land at the exact paths it records.
+echo >&2 "avr_rust_project: building crates to materialize generated sources ..."
+bazel build "$@" >&2
+
 echo >&2 "avr_rust_project: generating rust-project.json ..."
 exec "$GEN" "$@"

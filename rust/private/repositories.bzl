@@ -15,7 +15,7 @@
 """Repository instantiation for the AVR Rust toolchain."""
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("@rules_rust//rust:repositories.bzl", "rust_analyzer_toolchain_tools_repository", "rust_toolchain_tools_repository")
+load("@rules_rust//rust/private:repositories.bzl", "rust_analyzer_toolchain_tools_repository", "rust_toolchain_tools_repository")
 load("//avr:hosts.bzl", "SUPPORTED_HOSTS")
 
 def _avr_rust_toolchains_repo_impl(repository_ctx):
