@@ -39,8 +39,19 @@ def _to_crate_label(target):
     pkg = target.rstrip("/")
     return "{}:{}_bin".format(pkg, pkg.rsplit("/", 1)[-1])
 
-def avr_rust_project(name, targets, config = "rust_project", **kwargs):
-    """Generates a rust-project.json for the given AVR Rust firmware targets.
+def _avr_rust_project_impl(name, targets, config, visibility):
+    sh_binary(
+        name = name,
+        srcs = ["@avr//rust/private:gen_rust_project.sh"],
+        data = ["@rules_rust//tools/rust_analyzer:gen_rust_project"],
+        args = ["--config", config] + [_to_crate_label(t) for t in targets],
+        deps = ["@bazel_tools//tools/bash/runfiles"],
+        tags = ["manual"],
+        visibility = visibility,
+    )
+
+avr_rust_project = macro(
+    doc = """Generates a rust-project.json for the given AVR Rust firmware targets.
 
     Usage in the workspace-root BUILD file:
 
@@ -60,23 +71,20 @@ def avr_rust_project(name, targets, config = "rust_project", **kwargs):
 
         build:rust_project --config=avr
         build:rust_project --@avr//rust/config:avr=True
-
-    Args:
-        name: Target name; also the `bazel run` entry point.
-        targets: List of avr_rust_binary labels (the firmware names) to index.
-            Each is resolved to its underlying `<name>_bin` rust crate.
-        config: Name of the .bazelrc config supplying the AVR rust-analyzer
-            build flags. Defaults to "rust_project".
-        **kwargs: Forwarded to the underlying sh_binary (tags, visibility, ...).
-    """
-    crate_targets = [_to_crate_label(t) for t in targets]
-
-    sh_binary(
-        name = name,
-        srcs = ["@avr//rust/private:gen_rust_project.sh"],
-        data = ["@rules_rust//tools/rust_analyzer:gen_rust_project"],
-        args = ["--config", config] + crate_targets,
-        deps = ["@bazel_tools//tools/bash/runfiles"],
-        tags = kwargs.pop("tags", []) + ["manual"],
-        **kwargs
-    )
+    """,
+    attrs = {
+        "targets": attr.string_list(
+            doc = "List of avr_rust_binary labels (firmware names) to index. " +
+                  "Each is resolved to its underlying <name>_bin rust crate.",
+            mandatory = True,
+            configurable = False,
+        ),
+        "config": attr.string(
+            doc = "Name of the .bazelrc config supplying the AVR rust-analyzer " +
+                  "build flags.",
+            default = "rust_project",
+            configurable = False,
+        ),
+    },
+    implementation = _avr_rust_project_impl,
+)
